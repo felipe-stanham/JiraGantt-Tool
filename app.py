@@ -22,10 +22,18 @@ client = JiraClient(config)
 # --- Sidebar ---
 with st.sidebar:
     st.header("Open Statuses")
+    ALL_STATUSES = [
+        "Backlog", "Blocked", "On Hold", "Pending Manager Approval",
+        "In Progress", "In Review", "Waiting for Response",
+        "Cancelled", "Duplicate", "Closed",
+    ]
+    DONE_STATUSES = {"Cancelled", "Duplicate", "Closed"}
+    default_open = [s for s in ALL_STATUSES if s not in DONE_STATUSES]
+
     open_statuses = st.multiselect(
         "Select statuses considered 'open' for Gantt filtering:",
-        options=["To Do", "In Progress", "In Review", "Backlog", "Blocked"],
-        default=["To Do", "In Progress", "In Review"],
+        options=ALL_STATUSES,
+        default=default_open,
     )
 
 # --- Main area ---
