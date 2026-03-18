@@ -60,30 +60,35 @@ class JiraClient:
         url = f"{self.base_url}/rest/api/3/issue/{ticket_id}"
         return self._request("GET", url)
 
-    def get_children(self, parent_id: str, project_type: str) -> list:
+    def get_children(self, parent_id: str, project_type: str, fields: str = "*all") -> list:
         if project_type == "nextgen":
             jql = f"parent = {parent_id}"
         else:
             jql = f'"Epic Link" = {parent_id}'
 
         results = []
-        start_at = 0
+        next_page_token = None
         max_results = 100
 
         while True:
-            url = f"{self.base_url}/rest/api/3/search"
+            url = f"{self.base_url}/rest/api/3/search/jql"
             params = {
                 "jql": jql,
-                "startAt": start_at,
                 "maxResults": max_results,
+                "fields": fields,
             }
+            if next_page_token:
+                params["nextPageToken"] = next_page_token
+
             data = self._request("GET", url, params=params)
             issues = data.get("issues", [])
             results.extend(issues)
 
-            if start_at + len(issues) >= data.get("total", 0):
+            if data.get("isLast", True):
                 break
-            start_at += len(issues)
+            next_page_token = data.get("nextPageToken")
+            if not next_page_token:
+                break
 
         return results
 
