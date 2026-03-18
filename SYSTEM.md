@@ -19,4 +19,4 @@ A local Streamlit application that accepts a Jira Feature ticket ID, recursively
 ## Projects
 | ID      | Name                    | Status      | Summary                                              |
 |---------|-------------------------|-------------|------------------------------------------------------|
-| P-0001  | Jira Feature Report Tool | [ACTIVE]   | Recursive Jira fetch + multi-sheet Excel report tool |
+| P-0001  | Jira Feature Report Tool | [DONE]     | Recursive Jira fetch + multi-sheet Excel report tool |
