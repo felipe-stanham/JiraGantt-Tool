@@ -6,6 +6,7 @@ from core.jira_client import JiraClient, AuthError, TicketNotFoundError, JiraAPI
 from core.fetcher import fetch_tree, fetch_comments
 from core.excel_builder import build_excel
 from core.models import ReportConfig
+from core.creator import create_model_epic, CreatorError
 
 st.set_page_config(page_title="Jira Feature Report", page_icon="\U0001f5c2")
 st.title("\U0001f5c2 Jira Feature Report")
@@ -88,3 +89,21 @@ if st.button("Generate Report", disabled=not ticket_id):
 
 if not ticket_id:
     st.info("Configure open statuses in the sidebar before generating.")
+
+# --- Create Model Epic ---
+st.markdown("---")
+st.subheader("Create Model Epic")
+
+epic_name = st.text_input("Epic Name", key="epic_name_input")
+
+if st.button("Create Model Epic", disabled=not (ticket_id and epic_name)):
+    try:
+        with st.spinner("Creating model epic in Jira..."):
+            result = create_model_epic(ticket_id.strip(), epic_name.strip(), config, client)
+        st.success(f"Epic created: {result['id']}\n\n{result['url']}")
+    except CreatorError as e:
+        st.error(f"Jira API error: {e}")
+    except AuthError:
+        st.error("**Authentication failed.** Check your `JIRA_USER` and `JIRA_TOKEN` in `.env`.")
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")

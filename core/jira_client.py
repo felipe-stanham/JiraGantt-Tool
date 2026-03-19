@@ -92,6 +92,10 @@ class JiraClient:
 
         return results
 
+    def create_issue(self, payload: dict) -> dict:
+        url = f"{self.base_url}/rest/api/3/issue"
+        return self._request("POST", url, json=payload)
+
     def get_comments(self, ticket_id: str) -> list:
         results = []
         start_at = 0
