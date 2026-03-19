@@ -36,7 +36,7 @@ class Ticket:
     parent_id: Optional[str]
     parent_name: Optional[str]
     assignee: Optional[str]
-    depth: int  # 0=Feature, 1=Epic, 2=Story/Task
+    depth: int  # 0=Feature, 1=Epic, 2=Story/Task, 3=Sub-task
     children: List[Ticket] = field(default_factory=list)
 
 
