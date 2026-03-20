@@ -26,7 +26,7 @@ def _create_issue(summary: str, issue_type: str, parent_key: str, config: Config
         fields: dict = {
             "project": {"key": project_key},
             "summary": summary,
-            "issuetype": {"name": "Epic"},
+            "issuetype": {"name": config.issue_type_epic},
         }
         if parent_key:
             if config.project_type == "nextgen":
@@ -35,11 +35,15 @@ def _create_issue(summary: str, issue_type: str, parent_key: str, config: Config
                 fields["customfield_10014"] = parent_key
         payload = {"fields": fields}
     else:
+        issue_type_name = (
+            config.issue_type_story if issue_type == "Story"
+            else config.issue_type_subtask
+        )
         payload = {
             "fields": {
                 "project": {"key": project_key},
                 "summary": summary,
-                "issuetype": {"name": issue_type},
+                "issuetype": {"name": issue_type_name},
                 "parent": {"key": parent_key},
             }
         }

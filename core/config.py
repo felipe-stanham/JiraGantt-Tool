@@ -33,4 +33,7 @@ def load_config() -> Config:
         due_date_field_id=os.getenv("JIRA_DUE_DATE_FIELD"),
         project_type=os.getenv("JIRA_PROJECT_TYPE", "nextgen"),
         project_key=os.getenv("JIRA_PROJECT_KEY") or None,
+        issue_type_epic=os.getenv("JIRA_ISSUE_TYPE_EPIC", "Epic"),
+        issue_type_story=os.getenv("JIRA_ISSUE_TYPE_STORY", "Story"),
+        issue_type_subtask=os.getenv("JIRA_ISSUE_TYPE_SUBTASK", "Sub-Task"),
     )
