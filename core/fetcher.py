@@ -45,7 +45,7 @@ def _build_ticket(raw: dict, config: Config, depth: int, parent_id: str = None, 
 
 
 def _fetch_children(parent: Ticket, config: Config, client: JiraClient, depth: int) -> None:
-    if depth >= 2:
+    if depth >= 3:
         return
 
     raw_children = client.get_children(parent.id, config.project_type)

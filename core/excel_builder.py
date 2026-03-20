@@ -4,15 +4,42 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 from core.models import TicketTree, ReportConfig, Comment
 from core.gantt import calc_date_range, generate_week_columns, ticket_in_week
 
-GANTT_FILL = PatternFill(start_color="00B0F0", end_color="00B0F0", fill_type="solid")
 HEADER_FONT = Font(bold=True)
 HEADER_FILL = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+
+STATUS_COLORS = {
+    "Backlog": "C9C9C9",
+    "To Do": "8DB4E2",
+    "In Progress": "00B0F0",
+    "In Review": "FFC000",
+    "Waiting for Response": "F4B942",
+    "Pending Manager Approval": "C39BD3",
+    "Blocked": "FF6B6B",
+    "On Hold": "F8A487",
+    "Done": "00B050",
+    "Closed": "A6A6A6",
+    "Cancelled": "E8A598",
+    "Duplicate": "E8A598",
+}
+_FALLBACK_COLOR = "EBEBEB"
+
+
+def _status_fill(status: str) -> PatternFill:
+    color = STATUS_COLORS.get(status, _FALLBACK_COLOR)
+    return PatternFill(start_color=color, end_color=color, fill_type="solid")
+
+
+def _ticket_id_sort_key(ticket):
+    try:
+        return int(ticket.id.split("-")[-1])
+    except (ValueError, IndexError):
+        return 0
 
 
 def _auto_width(ws):
@@ -99,15 +126,23 @@ def _sheet_simplified_gantt(wb, tree: TicketTree, config: ReportConfig):
         ws.cell(row=row_idx, column=1, value=epic.id)
         ws.cell(row=row_idx, column=2, value=epic.name)
         ws.cell(row=row_idx, column=3, value=epic.assignee or "")
-        ws.cell(row=row_idx, column=4, value=epic.status)
+        status_cell = ws.cell(row=row_idx, column=4, value=epic.status)
+        status_cell.fill = _status_fill(epic.status)
         ws.cell(row=row_idx, column=5, value=epic.start_date)
         ws.cell(row=row_idx, column=6, value=epic.due_date)
 
+        fill = _status_fill(epic.status)
         for i, monday in enumerate(week_columns):
             if ticket_in_week(epic, monday):
-                ws.cell(row=row_idx, column=col_offset + i + 1).fill = GANTT_FILL
+                ws.cell(row=row_idx, column=col_offset + i + 1).fill = fill
 
     _auto_width(ws)
+
+
+def _apply_border_to_row(ws, row_idx: int, total_cols: int, side: Side):
+    border = Border(bottom=side)
+    for col in range(1, total_cols + 1):
+        ws.cell(row=row_idx, column=col).border = border
 
 
 def _sheet_full_gantt(wb, tree: TicketTree, config: ReportConfig):
@@ -129,28 +164,56 @@ def _sheet_full_gantt(wb, tree: TicketTree, config: ReportConfig):
     week_columns = generate_week_columns(min_d, max_d)
     _write_gantt_headers(ws, headers, week_columns)
     col_offset = len(headers)
+    total_cols = col_offset + len(week_columns)
+
+    thin_side = Side(border_style="thin")
+    medium_side = Side(border_style="medium")
 
     row_idx = 2
     for epic in sorted_epics:
         ws.cell(row=row_idx, column=1, value=epic.id)
         ws.cell(row=row_idx, column=2, value=epic.name)
         ws.cell(row=row_idx, column=3, value=epic.assignee or "")
-        ws.cell(row=row_idx, column=4, value=epic.status)
+        status_cell = ws.cell(row=row_idx, column=4, value=epic.status)
+        status_cell.fill = _status_fill(epic.status)
         ws.cell(row=row_idx, column=5, value=epic.start_date)
         ws.cell(row=row_idx, column=6, value=epic.due_date)
 
+        epic_fill = _status_fill(epic.status)
         for i, monday in enumerate(week_columns):
             if ticket_in_week(epic, monday):
-                ws.cell(row=row_idx, column=col_offset + i + 1).fill = GANTT_FILL
+                ws.cell(row=row_idx, column=col_offset + i + 1).fill = epic_fill
 
         row_idx += 1
 
-        for child in epic.children:
+        sorted_children = sorted(epic.children, key=_ticket_id_sort_key)
+        for child in sorted_children:
             ws.cell(row=row_idx, column=1, value=f"  {child.id}")
             ws.cell(row=row_idx, column=2, value=child.name)
             ws.cell(row=row_idx, column=3, value=child.assignee or "")
-            ws.cell(row=row_idx, column=4, value=child.status)
+            status_cell = ws.cell(row=row_idx, column=4, value=child.status)
+            status_cell.fill = _status_fill(child.status)
+            ws.cell(row=row_idx, column=5, value=child.start_date)
+            ws.cell(row=row_idx, column=6, value=child.due_date)
+
+            _apply_border_to_row(ws, row_idx, total_cols, thin_side)
             row_idx += 1
+
+            sorted_subtasks = sorted(child.children, key=_ticket_id_sort_key)
+            for subtask in sorted_subtasks:
+                ws.cell(row=row_idx, column=1, value=f"    {subtask.id}")
+                ws.cell(row=row_idx, column=2, value=subtask.name)
+                ws.cell(row=row_idx, column=3, value=subtask.assignee or "")
+                status_cell = ws.cell(row=row_idx, column=4, value=subtask.status)
+                status_cell.fill = _status_fill(subtask.status)
+                ws.cell(row=row_idx, column=5, value=subtask.start_date)
+                ws.cell(row=row_idx, column=6, value=subtask.due_date)
+
+                _apply_border_to_row(ws, row_idx, total_cols, thin_side)
+                row_idx += 1
+
+        # Apply medium border to the last row of the epic group (row_idx - 1)
+        _apply_border_to_row(ws, row_idx - 1, total_cols, medium_side)
 
     _auto_width(ws)
 
