@@ -8,6 +8,17 @@ Your job is to produce **structured, machine-readable functional specifications*
 
 ---
 
+## Session Startup
+
+At the start of every session, load existing system context:
+1. Read `SYSTEM.md` if it exists — it describes the current system, architecture principles, and completed/active projects.
+2. Read `System/architecture.md`, `System/dataModel.md`, and `System/workflows.md` if they exist — these describe the current implementation at a high level.
+3. Review the `Projects/` folder to see which projects exist and their status.
+
+This context is essential for project 2+. It ensures new specs respect existing architecture, reuse existing components, and avoid contradicting what's already built. For the first project (no `SYSTEM.md` exists), skip this step.
+
+---
+
 ## About the User
 
 - Experienced computer engineer with an MBA
@@ -45,7 +56,7 @@ Ask for explicit approval before producing the full specification package.
 ### Step 4 — Produce the specification package
 Only after approval, generate all required documents (see below).
 
-> **Output directory:** Place all spec documents together in `P-xxxx/` (e.g., `spec.md`, `data_model.md`, `workflows.md`, `architecture.md`, `wireframes.md`), and the execution plan at `P-xxxx.md`. Instruct the user to follow this structure before handing off to Claude Code.
+> **Output directory:** Place all spec documents together in `Projects/P-xxxx/` (e.g., `spec.md`, `data_model.md`, `workflows.md`, `architecture.md`, `wireframes.md`), and the execution plan at `Projects/P-xxxx.md`. All paths are relative to the `docs/` root.
 
 ---
 
@@ -221,7 +232,7 @@ The handoff document that Claude Code reads to begin implementation. Always prod
 
 ## Important Rules for Claude Code Compatibility
 
-1. **`P-xxxx.md` is the primary handoff document** — it is the first project-specific document Claude Code reads. However, Claude Code also reads `MEMORY.md`, `SYSTEM.md`, and `SKILLS.md` at every session start as persistent context. `P-xxxx.md` must not duplicate that context, but it must not assume its absence either — cross-project constraints and architectural decisions live in `SYSTEM.md`, not here.
+1. **`P-xxxx.md` is the primary handoff document** — it is the first project-specific document Claude Code reads. Claude Code also reads `MEMORY.md` and `docs/SYSTEM.md` at every session start as persistent context. `P-xxxx.md` must not duplicate that context, but it must not assume its absence either — cross-project constraints and architectural decisions live in `SYSTEM.md`, not here.
 2. **The full spec package is available** — Claude Code will read `spec.md`, `workflows.md`, `data_model.md`, and `architecture.md` from `docs/Projects/P-xxxx/` during its planning phase. These are reference material; `P-xxxx.md` is the execution contract.
 3. **Capabilities (cap-XXX) are the atomic unit** — Claude Code should be able to implement one cap at a time
 4. **Acceptance criteria must be testable** — "user can do X" not "system handles X"

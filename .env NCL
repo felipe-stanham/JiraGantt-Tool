@@ -1,0 +1,10 @@
+JIRA_URL=https://nclholdings.atlassian.net
+JIRA_USER=fstanham@nclcorp.com
+JIRA_TOKEN=ATATT3xFfGF07foDbvQpsVr-vcsvo-7_PJNkrztdlPXG4eAA2pnRXd47g8YQoarP0IvACRUDWo63m8WeFufsLIxK-sDxUWo3xroHcvxbLwoqCvDGcMxvN98PQuj1DqmVOEsw4s8VQWYWMMNSHzVrvnx4u2NqQskbXU7dUsPUggYK_w97jbF8sQI=2E3C5A4D
+JIRA_START_DATE_FIELD=customfield_10039
+JIRA_DUE_DATE_FIELD=duedate
+JIRA_PROJECT_TYPE=nextgen   # or: classic
+JIRA_PROJECT_KEY=MTC
+JIRA_ISSUE_TYPE_EPIC=Epic   # issue type name for Epics (default: Epic)
+JIRA_ISSUE_TYPE_STORY=Story # issue type name for Stories (default: Story)
+JIRA_ISSUE_TYPE_SUBTASK=Sub-task # issue type name for Sub-Tasks (default: Sub-Task)

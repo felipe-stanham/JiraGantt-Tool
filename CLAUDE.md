@@ -4,19 +4,19 @@
 
 At the start of every session:
 1. Read `MEMORY.md` if it exists — it contains persistent learnings from past sessions.
-2. Read `SYSTEM.md` if it exists — it contains a lightweight description of the current system state and active projects.
+2. Read `docs/SYSTEM.md` if it exists — it contains a lightweight description of the current system state and active projects.
 
 ## System Context
 
-- `SYSTEM.md` is the always-loaded system index. It describes the existing system at a high level without requiring all project files to be read.
-- `SYSTEM.md` contains:
+- `docs/SYSTEM.md` is the always-loaded system index. It describes the existing system at a high level without requiring all project files to be read.
+- `docs/SYSTEM.md` contains:
   - A brief description of what the system does and its main components
   - Key architectural decisions that must be respected across all projects
   - A list of completed and active projects with one-line summaries and links to their `P-xxxx.md`
   - Cross-project constraints that apply to every session
 - Never load individual project files unless the user specifies which project to work on.
-- When a project's final scope is marked `[DONE]`, update the project's entry in `SYSTEM.md` to reflect its completed status.
-- If `SYSTEM.md` does not exist at session start, ask the user whether to create it before proceeding.
+- When a project's final scope is marked `[DONE]`, update the project's entry in `docs/SYSTEM.md` to reflect its completed status.
+- If `docs/SYSTEM.md` does not exist at session start, ask the user whether to create it before proceeding.
 
 The expected `SYSTEM.md` format is:
 
