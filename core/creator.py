@@ -90,7 +90,7 @@ def create_model_epic(feature_id: str, epic_name: str, config: Config, client: J
             # Sub-task
             if current_story_key is None:
                 raise CreatorError("Sub-task found before any Story in template")
-            _create_issue(name, "Sub-task", current_story_key, config, client)
+            _create_issue(name, "Sub-Task", current_story_key, config, client)
 
     return {
         "id": epic_key,
