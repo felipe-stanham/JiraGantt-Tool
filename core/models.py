@@ -13,6 +13,7 @@ class Config:
     start_date_field_id: str
     due_date_field_id: str
     project_type: str  # "classic" | "nextgen"
+    project_key: Optional[str] = None  # e.g. "MTC" — used when no parent ticket is provided
     open_statuses: List[str] = field(default_factory=lambda: [
         "Backlog", "Blocked", "On Hold", "Pending Manager Approval",
         "In Progress", "In Review", "Waiting for Response",

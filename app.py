@@ -96,14 +96,37 @@ st.subheader("Create Model Epic")
 
 epic_name = st.text_input("Epic Name", key="epic_name_input")
 
-if st.button("Create Model Epic", disabled=not (ticket_id and epic_name)):
+if "creator_pending_confirm" not in st.session_state:
+    st.session_state.creator_pending_confirm = False
+
+def _run_creation(feature_id: str, name: str):
     try:
         with st.spinner("Creating model epic in Jira..."):
-            result = create_model_epic(ticket_id.strip(), epic_name.strip(), config, client)
-        st.success(f"Epic created: {result['id']}\n\n{result['url']}")
+            result = create_model_epic(feature_id, name, config, client)
+        epic_id = result["id"]
+        epic_url = result["url"]
+        st.success(f"Epic created: [{epic_id}]({epic_url})")
     except CreatorError as e:
         st.error(f"Jira API error: {e}")
     except AuthError:
         st.error("**Authentication failed.** Check your `JIRA_USER` and `JIRA_TOKEN` in `.env`.")
     except Exception as e:
         st.error(f"Unexpected error: {e}")
+
+if st.button("Create Model Epic", disabled=not epic_name):
+    if not ticket_id:
+        st.session_state.creator_pending_confirm = True
+    else:
+        _run_creation(ticket_id.strip(), epic_name.strip())
+
+if st.session_state.creator_pending_confirm:
+    st.warning(
+        "**No Feature ID provided.** The Epic will be created at the root of the "
+        "project/space, not linked to any Feature ticket. Do you want to continue?"
+    )
+    col1, col2, _ = st.columns([1, 1, 6])
+    if col1.button("Continue", key="creator_confirm_yes"):
+        st.session_state.creator_pending_confirm = False
+        _run_creation("", epic_name.strip())
+    if col2.button("Cancel", key="creator_confirm_no"):
+        st.session_state.creator_pending_confirm = False

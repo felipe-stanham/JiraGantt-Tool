@@ -12,27 +12,28 @@ _TEMPLATE_PATH = Path(__file__).parent.parent / "docs/Projects/P-0002/EpicTempla
 
 
 def _create_issue(summary: str, issue_type: str, parent_key: str, config: Config, client: JiraClient) -> str:
-    project_key = parent_key.split("-")[0]
+    if parent_key:
+        project_key = parent_key.split("-")[0]
+    elif config.project_key:
+        project_key = config.project_key
+    else:
+        raise CreatorError(
+            "No Feature ID provided and JIRA_PROJECT_KEY is not set in .env. "
+            "Cannot determine the target project."
+        )
 
     if issue_type == "Epic":
-        if config.project_type == "nextgen":
-            payload = {
-                "fields": {
-                    "project": {"key": project_key},
-                    "summary": summary,
-                    "issuetype": {"name": "Epic"},
-                    "parent": {"key": parent_key},
-                }
-            }
-        else:
-            payload = {
-                "fields": {
-                    "project": {"key": project_key},
-                    "summary": summary,
-                    "issuetype": {"name": "Epic"},
-                    "customfield_10014": parent_key,
-                }
-            }
+        fields: dict = {
+            "project": {"key": project_key},
+            "summary": summary,
+            "issuetype": {"name": "Epic"},
+        }
+        if parent_key:
+            if config.project_type == "nextgen":
+                fields["parent"] = {"key": parent_key}
+            else:
+                fields["customfield_10014"] = parent_key
+        payload = {"fields": fields}
     else:
         payload = {
             "fields": {

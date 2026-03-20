@@ -32,4 +32,5 @@ def load_config() -> Config:
         start_date_field_id=os.getenv("JIRA_START_DATE_FIELD"),
         due_date_field_id=os.getenv("JIRA_DUE_DATE_FIELD"),
         project_type=os.getenv("JIRA_PROJECT_TYPE", "nextgen"),
+        project_key=os.getenv("JIRA_PROJECT_KEY") or None,
     )
