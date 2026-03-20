@@ -66,12 +66,13 @@ The expected `SYSTEM.md` format is:
 
 ## Branching Strategy
 
-- Branch naming: `scope/<short-description>`
+- Branch naming: `scope/P-XXXX-NUMBER-<short-description>`
 - Always branch off `main`. Never branch off another scope branch.
 - One agent per branch when working in parallel.
 - Never commit directly to `main` except for trivial fixes.
-- Open a PR into `main` when a Scope is complete. Resolve conflicts on the scope branch before merging.
-- Delete the branch after merging.
+- Check with me before merging to main.
+- If multiple branches are open, before merging to main, merge to a test branch and run all tests for all the included scopes.
+- Delete the branches after merging to main.
 
 ## Planning
 
