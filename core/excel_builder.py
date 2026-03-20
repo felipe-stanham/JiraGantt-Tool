@@ -23,7 +23,7 @@ STATUS_COLORS = {
     "Blocked": "FF6B6B",
     "On Hold": "F8A487",
     "Done": "00B050",
-    "Closed": "A6A6A6",
+    "Closed": "70AD47",
     "Cancelled": "E8A598",
     "Duplicate": "E8A598",
 }
@@ -83,6 +83,9 @@ def _sheet_tickets(wb, tree: TicketTree):
     _auto_width(ws)
 
 
+_CLOSED_STATUSES = {"Closed", "Done"}
+
+
 def _sort_epics_by_due(epics):
     with_date = [e for e in epics if e.due_date is not None]
     without_date = [e for e in epics if e.due_date is None]
@@ -90,12 +93,21 @@ def _sort_epics_by_due(epics):
     return with_date + without_date
 
 
+def _epics_for_gantt(tree: TicketTree, open_statuses):
+    """Return closed epics (sorted by due) on top, then open epics (sorted by due)."""
+    all_epics = tree.epics()
+    closed = _sort_epics_by_due([e for e in all_epics if e.status in _CLOSED_STATUSES])
+    open_ = _sort_epics_by_due([e for e in all_epics if e.status in open_statuses])
+    return closed + open_
+
+
 def _write_gantt_headers(ws, headers, week_columns):
     _write_header(ws, headers)
     col_offset = len(headers)
     for i, monday in enumerate(week_columns):
         col = col_offset + i + 1
-        cell = ws.cell(row=1, column=col, value=monday.strftime("%d/%m"))
+        friday = monday + timedelta(days=4)
+        cell = ws.cell(row=1, column=col, value=friday.strftime("%d/%m"))
         cell.font = HEADER_FONT
         cell.fill = HEADER_FILL
         cell.alignment = Alignment(horizontal="center")
@@ -106,15 +118,14 @@ def _sheet_simplified_gantt(wb, tree: TicketTree, config: ReportConfig):
     ws = wb.create_sheet("Simplified Gantt")
     headers = ["ID", "Name", "Assignee", "Status", "Start Date", "Due Date"]
 
-    open_epics = tree.filter_open_epics(config.open_statuses)
-    sorted_epics = _sort_epics_by_due(open_epics)
+    sorted_epics = _epics_for_gantt(tree, config.open_statuses)
 
     min_d, max_d = calc_date_range(sorted_epics)
 
     if not sorted_epics or min_d is None:
         _write_header(ws, headers)
         ws.freeze_panes = "A2"
-        ws.cell(row=2, column=1, value="No open epics with dates found")
+        ws.cell(row=2, column=1, value="No epics with dates found")
         _auto_width(ws)
         return
 
@@ -149,15 +160,14 @@ def _sheet_full_gantt(wb, tree: TicketTree, config: ReportConfig):
     ws = wb.create_sheet("Full Gantt")
     headers = ["ID", "Name", "Assignee", "Status", "Start Date", "Due Date"]
 
-    open_epics = tree.filter_open_epics(config.open_statuses)
-    sorted_epics = _sort_epics_by_due(open_epics)
+    sorted_epics = _epics_for_gantt(tree, config.open_statuses)
 
     min_d, max_d = calc_date_range(sorted_epics)
 
     if not sorted_epics or min_d is None:
         _write_header(ws, headers)
         ws.freeze_panes = "A2"
-        ws.cell(row=2, column=1, value="No open epics with dates found")
+        ws.cell(row=2, column=1, value="No epics with dates found")
         _auto_width(ws)
         return
 
