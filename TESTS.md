@@ -1,27 +1,58 @@
 # Regression Test Registry
 
+> Critical-path tests only. Declarative — Claude Code reads these and generates verification scripts at runtime.
+> Run all before merging to `main` or deploying to prod. Always execute against `dev` environment (`ENV=dev`).
+
 ---
 
 ## P-0001 / Jira Feature Report Tool
 
-*(Acceptance criteria from P-0001 scopes — see docs/Projects/P-0001.md for details)*
+### Config & Auth
+
+**Source:** P-0001 / Scope 1 (cap-001, cap-002)
+
+- **test_config_loads:** Load config with all required `.env` variables set → `Config` object is populated, no error raised.
+- **test_config_missing_vars:** Remove a required variable from `.env` → `ConfigError` raised listing the missing variable name.
+- **test_jira_auth_success:** Make an authenticated GET request to Jira dev instance (e.g., fetch a known ticket) → HTTP 200, valid JSON returned.
+- **test_jira_auth_failure:** Use invalid credentials → `AuthError` raised with a user-readable message, not a raw HTTP error.
+
+### Fetcher — Tree Retrieval
+
+**Source:** P-0001 / Scope 1 (cap-003), P-0002 / Scope 1 (cap-001)
+
+- **test_fetch_tree_full_depth:** Call `fetch_tree` with a known dev Feature ID → Tree contains Feature (depth 0), Epics (depth 1), Stories/Tasks (depth 2), Sub-tasks (depth 3). Max depth is 3.
+- **test_fetch_tree_empty_children:** Call `fetch_tree` with a Feature whose Epic has zero children → No error, Epic appears with empty children list.
+
+### Excel Output
+
+**Source:** P-0001 / Scope 2 (cap-005, cap-006, cap-007, cap-010)
+
+- **test_excel_sheets_exist:** Generate a report from a known tree → Workbook contains exactly 5 sheets: Tickets, Simplified Gantt, Full Gantt, Updates, Weekly Updates.
+- **test_excel_tickets_sheet:** Open the Tickets sheet → One row per ticket in the tree, all expected columns present, Link column contains hyperlinks.
+- **test_excel_file_saved:** After `build_excel` → File exists at `./output/YYYYMMDD_<ticket-id>.xlsx`.
+
+### Gantt — Status Colors & Sorting
+
+**Source:** P-0002 / Scope 1 (cap-002, cap-004)
+
+- **test_gantt_status_colors:** Generate a report with tickets in known statuses → In Simplified Gantt, Status column cells and in-range week cells use the correct palette fill color (not old fixed blue). Unknown statuses use gray `EBEBEB`.
+- **test_gantt_sort_order:** Open Full Gantt sheet → Children of each Epic sorted by numeric ticket ID ascending (e.g., MTC-9 before MTC-10).
+
+### UI — Core Flow
+
+**Source:** P-0001 / Scope 3 (cap-004)
+
+- **test_ui_generate_report:** Launch Streamlit app, enter a valid dev Feature ID, click Generate → Download button appears, no error shown.
+- **test_ui_error_display:** Enter an invalid ticket ID, click Generate → Inline error message displayed, no stack trace.
 
 ---
 
 ## P-0002 / Jira Tool Enhancements
 
-### Scope 1: Fetcher & Report Enhancements
+### Create Model Epic
 
-**Source:** P-0002 / Scope 1
+**Source:** P-0002 / Scope 2 (cap-005, cap-006)
 
-- **cap-001:** Fetcher retrieves tickets at depth 0 (Feature), 1 (Epic), 2 (Story/Task), and 3 (Sub-task). Sub-tasks appear in the Tickets sheet. Comments are fetched for Sub-tasks alongside all other tickets. Depth is capped at 4 levels; no infinite recursion. Features/Epics/Stories with zero children at any level are handled without error.
-- **cap-002:** Each distinct status value maps to a unique fill color per the defined palette. Gantt week cells that are filled use the status color of that ticket row, not a single fixed blue. The Status column cell in both Gantt sheets is filled with the same status color. Tickets with an unrecognised status fall back to a neutral gray (`EBEBEB`).
-- **cap-003:** In the Full Gantt, a thick bottom border (medium weight) is applied to the last row of each Epic group. A thin bottom border is applied to each child row (Stories/Tasks and Sub-tasks). No blank rows are inserted; separators are purely border-based.
-- **cap-004:** In the Full Gantt, the children of each Epic are listed in ascending ticket ID order. Sub-tasks within each Story/Task are listed in ascending ticket ID order. Ticket ID sort is numeric-aware (MTC-9 before MTC-10).
-
-### Scope 2: Create Model Epic
-
-**Source:** P-0002 / Scope 2
-
-- **cap-005:** A "Create Model Epic" section is visible below the report form in the main area, always rendered regardless of report state. The user enters a Feature ID (text input) and an Epic name (text input). A "Create Model Epic" button is disabled when either field is empty. On success: a green success message shows the created Epic's Jira ticket ID and URL. On failure: an inline error message is shown; no stack trace.
-- **cap-006:** The creator reads `docs/Projects/P-0002/EpicTemplate.md` at runtime. Each `EpicName` token is replaced with the user-provided name. The resulting hierarchy: Epic at depth 0, Stories at depth 1, Sub-tasks at depth 2. Tickets are created in order: Epic first, then each Story followed immediately by its Sub-tasks. The Epic is linked to the Feature ID as its parent. Each Story is linked to the Epic. Each Sub-task is linked to its Story. No assignee, due date, start date, or description is set on any created ticket. The Epic is named `[MODEL] {user_provided_name}`. Stories and Sub-tasks are named exactly as the substituted template line.
+- **test_create_epic_ui_visible:** Launch Streamlit app → "Create Model Epic" section visible below the report form.
+- **test_create_epic_success:** Call `create_model_epic` with a valid dev Feature ID and name "TestEpic" → Epic created as `[MODEL] TestEpic`, Stories and Sub-tasks exist as children in correct hierarchy, returned dict contains `id` and `url`.
+- **test_create_epic_button_disabled:** In UI, leave Epic name empty → "Create Model Epic" button is disabled.
